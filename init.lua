@@ -1,1 +1,1 @@
-require('yoram')
+require('tricker')
