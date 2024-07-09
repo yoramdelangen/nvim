@@ -1,3 +1,36 @@
+--  Inspired by lspcontainer.nvim
+-- https://github.com/lspcontainers/lspcontainers.nvim/blob/main/lua/lspcontainers/init.lua
+local docker_cmd = function(name, image, workdir, network, docker_volume)
+    if workdir == nil then
+        workdir = vim.fn.getcwd()
+    end
+
+    local mnt_volume
+    if docker_volume ~= nil then
+        mnt_volume = "--volume=" .. docker_volume .. ":" .. workdir .. ":z"
+    else
+        mnt_volume = "--volume=" .. workdir .. ":" .. workdir .. ":z"
+    end
+
+    if network == nil then
+        network = "none"
+    end
+
+    return {
+        "docker",
+        "container",
+        "run",
+        "--interactive",
+        "--rm",
+        "--platform=linux/amd64",
+        "--name=nvim-lsp-" .. name,
+        "--network=" .. network,
+        "--workdir=" .. workdir,
+        mnt_volume,
+        image
+    }
+end
+
 return {
     "neovim/nvim-lspconfig",
     dependencies = {
@@ -16,15 +49,42 @@ return {
     config = function()
         local cmp = require('cmp')
         local cmp_lsp = require("cmp_nvim_lsp")
+        local lspconfig = require("lspconfig")
         local capabilities = vim.tbl_deep_extend(
             "force",
             {},
             vim.lsp.protocol.make_client_capabilities(),
             cmp_lsp.default_capabilities())
 
+        -- setup Luasnip
+        local luasnip = require("luasnip")
+        require("luasnip.loaders.from_vscode").lazy_load()
+        luasnip.config.setup({})
+
+        local lspdocker = {
+            intelephense = { image = "docker.io/lspcontainers/intelephense" },
+            tsserver = { image = "docker.io/lspcontainers/tsserver" },
+            volar = { image = "docker.io/lspcontainers/tsserver" },
+            bashls = { image = "docker.io/lspcontainers/bash-language-server" },
+            tailwindcss = { image = "docker.io/lspcontainers/tailwindcss-language-server" },
+            yamlls = { image = "docker.io/lspcontainers/yaml-language-server" },
+            -- lua_ls = { image = "docker.io/lspcontainers/lua-language-server" },
+        }
+
+        for lsp_name, opts in pairs(lspdocker) do
+            lspconfig[lsp_name].setup {
+                before_init = function(params)
+                    params.processId = vim.NIL
+                end,
+                capabilities = capabilities,
+                cmd = docker_cmd(lsp_name, opts.image),
+            }
+        end
+
         require("fidget").setup({})
         require("mason").setup()
         require("mason-lspconfig").setup({
+            automatic_installation = false,
             ensure_installed = {
                 "lua_ls",
                 "rust_analyzer",
@@ -38,12 +98,11 @@ return {
                 end,
 
                 ["lua_ls"] = function()
-                    local lspconfig = require("lspconfig")
                     lspconfig.lua_ls.setup {
                         capabilities = capabilities,
                         settings = {
                             Lua = {
-				    runtime = { version = "Lua 5.1" },
+                                runtime = { version = "Lua 5.1" },
                                 diagnostics = {
                                     globals = { "vim", "it", "describe", "before_each", "after_each" },
                                 }
