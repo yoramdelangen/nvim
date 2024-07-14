@@ -7,7 +7,6 @@ vim.opt.tabstop = 4
 vim.opt.softtabstop = 4
 vim.opt.shiftwidth = 4
 vim.opt.expandtab = true
-
 vim.opt.smartindent = true
 
 vim.opt.wrap = false
@@ -47,14 +46,36 @@ command("Q", "q", {})
 
 -- Create a command `:Format` local to the LSP buffer
 command("Format", function(args)
-    -- vim.lsp.buf.format()
-    local range = nil
-    if args.count ~= -1 then
-        local end_line = vim.api.nvim_buf_get_lines(0, args.line2 - 1, args.line2, true)[1]
-        range = {
-            start = { args.line1, 0 },
-            ["end"] = { args.line2, end_line:len() },
-        }
-    end
-    require("conform").format({ async = false, lsp_fallback = true, range = range })
+	-- vim.lsp.buf.format()
+	local range = nil
+	if args.count ~= -1 then
+		local end_line = vim.api.nvim_buf_get_lines(0, args.line2 - 1, args.line2, true)[1]
+		range = {
+			start = { args.line1, 0 },
+			["end"] = { args.line2, end_line:len() },
+		}
+	end
+
+	require("conform").format({ async = false, lsp_fallback = true, range = range })
 end, { range = true, desc = "Format current buffer with LSP" })
+
+-- FILE TYPES
+vim.filetype.add({
+	extension = {
+		conf = "conf",
+		env = "dotenv",
+		tiltfile = "tiltfile",
+		Tiltfile = "tiltfile",
+	},
+	filename = {
+		[".env"] = "dotenv",
+		[".eslintrc.json"] = "jsonc", -- assuming nx project.json
+		["project.json"] = "jsonc", -- assuming nx project.json
+		[".yamlfmt"] = "yaml",
+	},
+	pattern = {
+		["docker%-compose%.y.?ml"] = "yaml.docker-compose",
+		["%.env%.[%w_.-]+"] = "dotenv",
+		["tsconfig%."] = "jsonc",
+	},
+})
