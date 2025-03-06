@@ -26,6 +26,3 @@ vim.keymap.set("n", "<C-u>", "<C-u>zz")
 -- center the buffer view.
 vim.keymap.set("n", "n", "nzzzv")
 vim.keymap.set("n", "N", "Nzzzv")
-
--- format current buffer
-vim.keymap.set("n", "<leader>f", vim.lsp.buf.format)

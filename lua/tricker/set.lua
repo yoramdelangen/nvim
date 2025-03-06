@@ -44,21 +44,6 @@ command("Wq", "wq", {})
 command("W", "w", {})
 command("Q", "q", {})
 
--- Create a command `:Format` local to the LSP buffer
-command("Format", function(args)
-	-- vim.lsp.buf.format()
-	local range = nil
-	if args.count ~= -1 then
-		local end_line = vim.api.nvim_buf_get_lines(0, args.line2 - 1, args.line2, true)[1]
-		range = {
-			start = { args.line1, 0 },
-			["end"] = { args.line2, end_line:len() },
-		}
-	end
-
-	require("conform").format({ async = false, lsp_fallback = true, range = range })
-end, { range = true, desc = "Format current buffer with LSP" })
-
 -- FILE TYPES
 vim.filetype.add({
 	extension = {

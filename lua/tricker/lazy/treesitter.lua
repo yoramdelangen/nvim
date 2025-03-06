@@ -11,14 +11,11 @@ return {
 			-- A list of parser names, or "all"
 			ensure_installed = {
 				"vimdoc",
-				"javascript",
-				"typescript",
 				"lua",
 				"rust",
 				"jsdoc",
 				"bash",
 				"go",
-				"php",
 				"gitignore",
 			},
 
